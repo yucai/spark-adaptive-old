@@ -163,9 +163,9 @@ case class OptimizeJoin(conf: SQLConf) extends Rule[SparkPlan] {
             case e: ShuffleExchangeExec => e
           }.length
 
-          if (conf.adaptiveAllowAdditionShuffle || numExchanges == 0 ||
-            (queryStage.isInstanceOf[ShuffleQueryStage] && numExchanges <=  1
-              && afterEnsureRequirements.isInstanceOf[ShuffleExchangeExec])) {
+          if (afterEnsureRequirements.isInstanceOf[ShuffleExchangeExec] &&
+            (conf.adaptiveAllowAdditionShuffle || numExchanges == 0 ||
+              (queryStage.isInstanceOf[ShuffleQueryStage] && numExchanges <=  1))) {
             // Update the plan in queryStage
             queryStage.child = newChild
             broadcastJoin
