@@ -171,7 +171,6 @@ case class OptimizeJoin(conf: SQLConf) extends Rule[SparkPlan] {
             }
           }
 
-          // EnsureRequirements may remove top shuffle exchange, currently it is not allowed
           if (checkTopShuffleExchange(queryStage) &&
             (conf.adaptiveAllowAdditionShuffle || numExchanges == 0 ||
               (queryStage.isInstanceOf[ShuffleQueryStage] && numExchanges <=  1))) {
