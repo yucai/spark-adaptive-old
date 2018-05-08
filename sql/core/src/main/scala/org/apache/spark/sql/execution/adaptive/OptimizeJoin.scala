@@ -163,7 +163,16 @@ case class OptimizeJoin(conf: SQLConf) extends Rule[SparkPlan] {
             case e: ShuffleExchangeExec => e
           }.length
 
-          if (afterEnsureRequirements.isInstanceOf[ShuffleExchangeExec] &&
+          def checkTopShuffleExchange(qs: QueryStage) = {
+            qs match {
+              case _: ShuffleQueryStage =>
+                afterEnsureRequirements.isInstanceOf[ShuffleExchangeExec]
+              case _ => true
+            }
+          }
+
+          // EnsureRequirements may remove top shuffle exchange, currently it is not allowed
+          if (checkTopShuffleExchange(queryStage) &&
             (conf.adaptiveAllowAdditionShuffle || numExchanges == 0 ||
               (queryStage.isInstanceOf[ShuffleQueryStage] && numExchanges <=  1))) {
             // Update the plan in queryStage
