@@ -163,16 +163,12 @@ case class OptimizeJoin(conf: SQLConf) extends Rule[SparkPlan] {
             case e: ShuffleExchangeExec => e
           }.length
 
-          def checkTopShuffleExchange(qs: QueryStage) = {
-            qs match {
-              case _: ShuffleQueryStage =>
-                afterEnsureRequirements.isInstanceOf[ShuffleExchangeExec]
-              case _ => true
-            }
+          val topShuffleCheck = queryStage match {
+            case _: ShuffleQueryStage => afterEnsureRequirements.isInstanceOf[ShuffleExchangeExec]
+            case _ => true
           }
 
-          if (checkTopShuffleExchange(queryStage) &&
-            (conf.adaptiveAllowAdditionShuffle || numExchanges == 0 ||
+          if (topShuffleCheck && (conf.adaptiveAllowAdditionShuffle || numExchanges == 0 ||
               (queryStage.isInstanceOf[ShuffleQueryStage] && numExchanges <=  1))) {
             // Update the plan in queryStage
             queryStage.child = newChild
