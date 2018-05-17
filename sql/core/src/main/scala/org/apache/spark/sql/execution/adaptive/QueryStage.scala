@@ -37,6 +37,10 @@ import org.apache.spark.util.ThreadUtils
  */
 abstract class QueryStage extends UnaryExecNode {
 
+  protected def targetPostShuffleInputSize: Long = conf.targetPostShuffleInputSize
+  protected def adaptiveTargetPostShuffleRowCount: Long = conf.adaptiveTargetPostShuffleRowCount
+  protected def minNumPostShufflePartitions: Int = conf.minNumPostShufflePartitions
+
   var child: SparkPlan
 
   // Ignore this wrapper for canonicalizing.
@@ -111,9 +115,9 @@ abstract class QueryStage extends UnaryExecNode {
       .filter(_ != null).toArray
     if (childMapOutputStatistics.length > 0) {
       val exchangeCoordinator = new ExchangeCoordinator(
-        conf.targetPostShuffleInputSize,
-        conf.adaptiveTargetPostShuffleRowCount,
-        conf.minNumPostShufflePartitions)
+        targetPostShuffleInputSize,
+        adaptiveTargetPostShuffleRowCount,
+        minNumPostShufflePartitions)
 
       if (queryStageInputs.length == 2 && queryStageInputs.forall(_.skewedPartitions.isDefined)) {
         // If a skewed join is detected and optimized, we will omit the skewed partitions when
@@ -191,6 +195,15 @@ abstract class QueryStage extends UnaryExecNode {
  * The last QueryStage of an execution plan.
  */
 case class ResultQueryStage(var child: SparkPlan) extends QueryStage
+
+case class DataWritingQueryStage(var child: SparkPlan) extends QueryStage {
+  override protected def targetPostShuffleInputSize: Long =
+    conf.dataWritingPostShuffleInputSize
+
+  override protected def adaptiveTargetPostShuffleRowCount: Long = 200L * 1000 * 1000
+
+  override protected def minNumPostShufflePartitions: Int = 1
+}
 
 /**
  * A shuffle QueryStage whose child is a ShuffleExchange.

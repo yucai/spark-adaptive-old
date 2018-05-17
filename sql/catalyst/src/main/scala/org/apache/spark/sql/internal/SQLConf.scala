@@ -220,6 +220,14 @@ object SQLConf {
       .bytesConf(ByteUnit.BYTE)
       .createWithDefault(64 * 1024 * 1024)
 
+  val SHUFFLE_DATA_WRITING_POSTSHUFFLE_INPUT_SIZE =
+    buildConf("spark.sql.adaptive.shuffle.dataWritingPostShuffleInputSize")
+      .doc("Similar to spark.sql.adaptive.shuffle.targetPostShuffleInputSize, this configure" +
+        "provides a different setting for the data writing command like CTAS, Insert etc., it" +
+        "merges the small files in the last stage.")
+      .bytesConf(ByteUnit.BYTE)
+      .createWithDefault(512 * 1024 * 1024)
+
   val ADAPTIVE_EXECUTION_ENABLED = buildConf("spark.sql.adaptive.enabled")
     .doc("When true, enable adaptive query execution.")
     .booleanConf
@@ -1333,6 +1341,9 @@ class SQLConf extends Serializable with Logging {
   def cacheVectorizedReaderEnabled: Boolean = getConf(CACHE_VECTORIZED_READER_ENABLED)
 
   def numShufflePartitions: Int = getConf(SHUFFLE_PARTITIONS)
+
+  def dataWritingPostShuffleInputSize: Long =
+    getConf(SHUFFLE_DATA_WRITING_POSTSHUFFLE_INPUT_SIZE)
 
   def targetPostShuffleInputSize: Long =
     getConf(SHUFFLE_TARGET_POSTSHUFFLE_INPUT_SIZE)

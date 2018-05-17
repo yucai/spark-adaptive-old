@@ -22,7 +22,7 @@ import scala.collection.mutable.ArrayBuffer
 
 import org.apache.spark.sql.catalyst.rules.Rule
 import org.apache.spark.sql.execution.SparkPlan
-import org.apache.spark.sql.execution.command.ExecutedCommandExec
+import org.apache.spark.sql.execution.command.DataWritingCommandExec
 import org.apache.spark.sql.execution.exchange.{BroadcastExchangeExec, Exchange, ShuffleExchangeExec}
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types.StructType
@@ -74,6 +74,10 @@ case class PlanQueryStage(conf: SQLConf) extends Rule[SparkPlan] {
           }
       }
     }
-    ResultQueryStage(newPlan)
+
+    newPlan match {
+      case _: DataWritingCommandExec => DataWritingQueryStage(newPlan)
+      case _ => ResultQueryStage(newPlan)
+    }
   }
 }
