@@ -100,6 +100,7 @@ class QueryStageSuite extends SparkFunSuite with BeforeAndAfterAll {
     }.length
     assert(numBhjAfterExecution === 1)
 
+    // Both shuffle should be local shuffle
     val queryStageInputs = join.queryExecution.executedPlan.collect {
       case q: ShuffleQueryStageInput => q
     }
